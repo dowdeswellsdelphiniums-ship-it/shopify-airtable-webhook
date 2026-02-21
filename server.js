@@ -5,6 +5,11 @@ import crypto from "crypto";
 const app = express();
 app.use(express.raw({ type: "application/json" }));
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 function verifyShopifyHmac(req) {
   try {
     const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
@@ -23,7 +28,7 @@ function verifyShopifyHmac(req) {
 
     return crypto.timingSafeEqual(a, b);
   } catch (e) {
-    console.error("HMAC verify error:", e);
+    console.error("received (unverified)", e);
     return false;
   }
 }
@@ -33,7 +38,7 @@ app.post("/webhooks/shopify/orders", async (req, res) => {
 
   if (!ok) {
     console.log("Webhook arrived but signature did NOT verify (no crash).");
-    return res.status(401).send("Invalid HMAC");
+    return res.status(401).send("received (unverified)");
   }
 
   console.log("Webhook verified OK!");
@@ -42,6 +47,10 @@ app.post("/webhooks/shopify/orders", async (req, res) => {
 
 app.get("/", (req, res) => {
   res.send("Webhook server is running");
+});
+
+app.get("/ping", (req, res) => {
+  res.send("pong");
 });
 
 const PORT = process.env.PORT || 3000;
