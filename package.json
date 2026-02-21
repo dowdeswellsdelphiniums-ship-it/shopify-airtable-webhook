@@ -1,0 +1,13 @@
+{
+  "name": "shopify-airtable-webhook",
+  "version": "1.0.0",
+  "description": "Shopify webhook listener",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
