@@ -44,6 +44,12 @@ app.post("/webhooks/shopify/orders", async (req, res) => {
     return res.status(400).send("bad json");
   }
 
+  // ✅ Ignore immediately-voided/fraud/test orders
+  if ((order.financial_status ?? "").toLowerCase() === "voided") {
+    console.log("Ignoring voided order:", order.id, order.email);
+    return res.status(200).send("ignored");
+  }
+
   const rawJson = JSON.stringify(order);
 
   const fields = {
