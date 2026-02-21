@@ -28,7 +28,7 @@ function verifyShopifyHmac(req) {
 
     return crypto.timingSafeEqual(a, b);
   } catch (e) {
-    console.error("received (unverified)", e);
+    console.error("HMAC verify error:", e);
     return false;
   }
 }
