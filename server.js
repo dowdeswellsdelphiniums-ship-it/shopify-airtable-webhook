@@ -43,7 +43,7 @@ app.post("/webhooks/shopify/orders", async (req, res) => {
      console.log("ORDER STATUS CHECK →", { id: order.id, email: order.email, financial_status: order.financial_status, fulfillment_status: order.fulfillment_status });
 
   if ((order.financial_status ?? "").toLowerCase() === "voided") {
-    ...
+    
   }
     console.error("Could not parse JSON:", e);
     return res.status(400).send("bad json");
