@@ -97,7 +97,47 @@ app.post("/webhooks/shopify/orders", async (req, res) => {
       console.error("Airtable error:", txt);
       return res.status(200).send("airtable error logged");
     }
+    const lineRecords = (order.line_items || [])
+      .filter((item) => item.id)
+      .map((item) => ({
+        fields: {
+          "Shopify Line ID": String(item.id),
+          "Shopify Order ID": String(order.id ?? ""),
+          "Order Name": order.name ?? "",
+          "Product Name": item.title ?? item.name ?? "",
+          "SKU": item.sku ?? "",
+          "Variant": item.variant_title ?? "",
+          "Quantity": Number(item.quantity ?? 0),
+          "Price": item.price ? Number(item.price) : null,
+          "Fulfillment Status": item.fulfillment_status ?? "",
+        },
+      }));
 
+    if (lineRecords.length) {
+      const lineUrl = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${encodeURIComponent(
+        "Shopify Order Lines"
+      )}`;
+
+      const lineResp = await fetch(lineUrl, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          performUpsert: { fieldsToMergeOn: ["Shopify Line ID"] },
+          records: lineRecords,
+        }),
+      });
+
+      if (!lineResp.ok) {
+        const lineTxt = await lineResp.text();
+        console.error("Airtable line item error:", lineTxt);
+      } else {
+        console.log("✅ Upserted line items:", lineRecords.length);
+      }
+    }
+      
     console.log("✅ Upserted order to Airtable:", fields["Shopify Order ID"]);
     return res.status(200).send("ok");
   } catch (e) {
